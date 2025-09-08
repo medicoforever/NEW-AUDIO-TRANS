@@ -6,7 +6,6 @@ An AI-powered tool to record or upload audio, which then provides a complete and
 *(Replace the link above with your actual Vercel deployment URL)*
 
 ---
-
   
 ![Application Screenshot](app-audio-to-trans.png)
 
