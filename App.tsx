@@ -1,6 +1,8 @@
 
 
 
+
+
 import React, { useState, useCallback, useEffect } from 'react';
 import AudioRecorder from './components/AudioRecorder';
 import ResultsDisplay from './components/ResultsDisplay';
@@ -296,7 +298,7 @@ const App: React.FC = () => {
     <div className="min-h-screen bg-slate-100 flex flex-col items-center justify-center p-4 font-sans">
       <div className="w-full max-w-3xl mx-auto">
         <header className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-slate-800">Audio Transcription & Translation</h1>
+          <h1 className="text-4xl font-bold text-slate-800">AI Audio Transcription & Translation</h1>
           <p className="text-slate-600 mt-2">
             {mode === 'single' && 'Record or upload audio, and let AI provide a clean, corrected, and translated English transcript.'}
             {mode === 'batch' && 'Manage and transcribe multiple audio files efficiently.'}
@@ -312,8 +314,6 @@ const App: React.FC = () => {
                 aria-label="Select AI Model"
               >
                 <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
-                <option value="gemini-2.5-pro">Gemini 2.5 Pro</option>
-                <option value="gemini-2.5-flash-lite">Gemini 2.5 Flash Lite</option>
               </select>
             </div>
           </div>

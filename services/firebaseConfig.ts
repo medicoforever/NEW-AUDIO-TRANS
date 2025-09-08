@@ -1,11 +1,11 @@
 // This file contains the configuration for your Firebase project.
-// It reads the configuration from environment variables.
+// It was automatically updated with the details you provided.
 
 export const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  apiKey: "AIzaSyCsvaphTIz261oTCBLE9pd7sc6q4WxavCs",
+  authDomain: "lkmkbgndkb.firebaseapp.com",
+  projectId: "lkmkbgndkb",
+  storageBucket: "lkmkbgndkb.appspot.com",
+  messagingSenderId: "1087976758964",
+  appId: "1:1087976758964:web:fa742ebbd4063bdd3f41e1",
 };

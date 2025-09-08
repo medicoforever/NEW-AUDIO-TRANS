@@ -1,6 +1,6 @@
 {
-  "name": "Copy of Audio Transcription & Translation..",
-  "description": "An AI-powered tool to record or upload audio, which then provides a complete andate English transcript. The app identifies the audio's language, translates if necessary, and corrects grammatical mistakes for a polished output..",
+  "name": "AI Audio Transcription & Translation",
+  "description": "An AI-powered tool to record or upload audio. It provides a complete English transcript by identifying the language, translating if necessary, and correcting grammar.",
   "requestFramePermissions": [
     "microphone"
   ]

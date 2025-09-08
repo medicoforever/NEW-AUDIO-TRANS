@@ -1,6 +1,7 @@
 
 
 
+
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useAudioRecorder } from '../hooks/useAudioRecorder';
 import { processAudio, createChat, blobToBase64, getCleanMimeType, base64ToBlob } from '../services/geminiService';
@@ -555,8 +556,6 @@ const BatchProcessor: React.FC<BatchProcessorProps> = ({ onBack, model }) => {
                                                                         aria-label={`Select AI Model for re-processing ${batch.name}`}
                                                                     >
                                                                         <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
-                                                                        <option value="gemini-2.5-pro">Gemini 2.5 Pro</option>
-                                                                        <option value="gemini-2.5-flash-lite">Gemini 2.5 Flash Lite</option>
                                                                     </select>
                                                                     <button
                                                                         onClick={() => handleReprocessBatch(batch.id)}
