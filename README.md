@@ -8,7 +8,7 @@ An AI-powered tool to record or upload audio, which then provides a complete and
 ---
 
   
-*(It's highly recommended to add a screenshot of your application here)*
+![Application Screenshot](app-audio-to-trans.png)
 
 ## ✨ Key Features
 
