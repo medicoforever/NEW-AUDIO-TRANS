@@ -10,11 +10,20 @@
 //    For production, you should set up proper security rules.
 
 export const firebaseConfig = {
-  // PASTE YOUR FIREBASE CONFIG OBJECT HERE
-  apiKey: "AIzaXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
-  authDomain: "your-project-id.firebaseapp.com",
-  projectId: "your-project-id",
-  storageBucket: "your-project-id.appspot.com",
-  messagingSenderId: "123456789012",
-  appId: "1:123456789012:web:1234567890abcdef",
+// Import the functions you need from the SDKs you need
+import { initializeApp } from "firebase/app";
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
+
+// Your web app's Firebase configuration
+const firebaseConfig = {
+  apiKey: "AIzaSyCsvaphTIz261oTCBLE9pd7sc6q4WxavCs",
+  authDomain: "lkmkbgndkb.firebaseapp.com",
+  projectId: "lkmkbgndkb",
+  storageBucket: "lkmkbgndkb.firebasestorage.app",
+  messagingSenderId: "1087976758964",
+  appId: "1:1087976758964:web:fa742ebbd4063bdd3f41e1"
 };
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
