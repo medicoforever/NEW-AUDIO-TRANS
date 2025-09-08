@@ -1,7 +1,4 @@
 
-
-
-
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useAudioRecorder } from '../hooks/useAudioRecorder';
 import { processAudio, createChat, blobToBase64, getCleanMimeType, base64ToBlob } from '../services/geminiService';
@@ -25,7 +22,7 @@ interface ChatMessage {
 
 interface Batch {
     id: string;
-    name: string;
+    name:string;
     audioBlobs: Blob[];
     transcript: string | null;
     status: BatchStatus;
@@ -69,7 +66,7 @@ const BatchProcessor: React.FC<BatchProcessorProps> = ({ onBack, model }) => {
     // Auto-save effect
     useEffect(() => {
         const saveBatches = async () => {
-            if (!user || batches.length === 0) return;
+            if (!user) return; // Don't save if there are no batches, to allow clearing history
 
             try {
                 const serializableBatches: SerializableBatch[] = await Promise.all(
@@ -122,7 +119,7 @@ const BatchProcessor: React.FC<BatchProcessorProps> = ({ onBack, model }) => {
                         return {
                             ...sBatch,
                             audioBlobs: blobs,
-                            chat: null,
+                            chat: null, // Chat sessions are not serializable and must be recreated
                             isChatting: false,
                         };
                     });
@@ -307,19 +304,21 @@ const BatchProcessor: React.FC<BatchProcessorProps> = ({ onBack, model }) => {
         if (batch.isChatting) return;
 
         const userMessage = message || '[Audio Message]';
-        const updatedHistory = [...(batch.chatHistory || []), { author: 'You' as const, text: userMessage }];
-        setBatches(prev => prev.map(b => b.id === batchId ? { ...b, isChatting: true, chatHistory: updatedHistory } : b));
+        const updatedHistoryWithUser = [...(batch.chatHistory || []), { author: 'You' as const, text: userMessage }];
+        
+        setBatches(prev => prev.map(b => b.id === batchId ? { ...b, isChatting: true, chatHistory: updatedHistoryWithUser } : b));
 
         try {
             let chatToUse = batch.chat;
-            // Recreate chat session if it doesn't exist
+            // Recreate chat session if it doesn't exist, now with full history
             if (!chatToUse && batch.transcript && batch.audioBlobs.length > 0) {
                 const mimeType = getCleanMimeType(batch.audioBlobs[0]);
                 const mergedBlob = new Blob(batch.audioBlobs, { type: mimeType });
-                chatToUse = await createChat(mergedBlob, batch.transcript, batch.model);
+                chatToUse = await createChat(mergedBlob, batch.transcript, batch.model, batch.chatHistory);
                 
+                const newChat = chatToUse;
                 // Update batch in state with the new chat session for future use
-                setBatches(prev => prev.map(b => b.id === batchId ? { ...b, chat: chatToUse } : b));
+                setBatches(prev => prev.map(b => b.id === batchId ? { ...b, chat: newChat } : b));
             }
 
             if (!chatToUse) {
@@ -348,14 +347,18 @@ const BatchProcessor: React.FC<BatchProcessorProps> = ({ onBack, model }) => {
                  return;
             }
 
-            // FIX: The `sendMessage` method expects an object with a `message` property containing the parts array.
             const response = await chatToUse.sendMessage({ message: messageParts });
             const responseText = response.text;
-            setBatches(prev => prev.map(b => b.id === batchId ? {...b, chatHistory: [...updatedHistory, { author: 'AI' as const, text: responseText }]} : b));
+
+            // FIX: Use the functional form of setBatches to avoid stale state.
+            // Append the new AI message to the most recent chat history.
+            setBatches(prev => prev.map(b => b.id === batchId ? {...b, chatHistory: [...(b.chatHistory || []), { author: 'AI' as const, text: responseText }]} : b));
+
         } catch (err) {
             console.error("Chat error:", err);
             const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred.';
-            setBatches(prev => prev.map(b => b.id === batchId ? {...b, chatHistory: [...updatedHistory, { author: 'AI' as const, text: `Sorry, I encountered an error: ${errorMessage}` }]} : b));
+            // FIX: Use the functional form of setBatches to avoid stale state.
+            setBatches(prev => prev.map(b => b.id === batchId ? {...b, chatHistory: [...(b.chatHistory || []), { author: 'AI' as const, text: `Sorry, I encountered an error: ${errorMessage}` }]} : b));
         } finally {
             setBatches(prev => prev.map(b => b.id === batchId ? {...b, isChatting: false} : b));
         }

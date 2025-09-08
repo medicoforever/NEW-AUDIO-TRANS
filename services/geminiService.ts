@@ -3,6 +3,12 @@ import { GoogleGenAI, Type, GenerateContentResponse, Chat } from "@google/genai"
 import { GEMINI_PROMPT } from '../constants';
 import { getGeminiClient } from './geminiClient';
 
+// A local interface to match the structure used in the components
+interface ChatMessage {
+  author: 'You' | 'AI';
+  text: string;
+}
+
 export const getCleanMimeType = (blob: Blob): string => {
   let mimeType = blob.type;
   if (mimeType) {
@@ -83,7 +89,12 @@ export const processAudio = async (audioBlob: Blob, model: string): Promise<stri
   }
 };
 
-export const createChat = async (audioBlob: Blob, initialTranscript: string, model: string): Promise<Chat> => {
+export const createChat = async (
+  audioBlob: Blob, 
+  initialTranscript: string, 
+  model: string,
+  existingHistory?: ChatMessage[] // Optional parameter for existing history
+): Promise<Chat> => {
   const ai = getGeminiClient();
   const base64Audio = await blobToBase64(audioBlob);
   
@@ -101,15 +112,29 @@ export const createChat = async (audioBlob: Blob, initialTranscript: string, mod
 
   const modelResponsePart = { text: `This is the transcript you requested:\n\n${initialTranscript}` };
 
+  const historyForGemini = [
+    { role: 'user' as const, parts: userMessageParts },
+    { role: 'model' as const, parts: [modelResponsePart] },
+  ];
+
+  // If there's an existing chat history, convert and append it
+  if (existingHistory && existingHistory.length > 1) {
+    // The first message in our app's history is the initial AI greeting with the transcript,
+    // which is already covered by the context above. We only need to add the subsequent messages.
+    const subsequentHistory = existingHistory.slice(1);
+    const convertedHistory = subsequentHistory.map(msg => ({
+      role: msg.author === 'You' ? 'user' as const : 'model' as const,
+      parts: [{ text: msg.text }],
+    }));
+    historyForGemini.push(...convertedHistory);
+  }
+
   const chat = ai.chats.create({
     model: model,
     config: {
       systemInstruction: 'You are a helpful AI assistant. The user has provided an audio and you have transcribed it. Now, answer the user\'s follow-up questions based on the content of the audio and the transcript.',
     },
-    history: [
-      { role: 'user', parts: userMessageParts },
-      { role: 'model', parts: [modelResponsePart] },
-    ],
+    history: historyForGemini,
   });
   return chat;
 };

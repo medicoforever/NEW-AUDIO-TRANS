@@ -2,12 +2,13 @@
 
 An AI-powered tool to record or upload audio, which then provides a complete and accurate English transcript. The app identifies the audio's language, translates if necessary, and corrects grammatical mistakes for a polished output.
 
-**[➡️ View Live Demo](https://new-audio-trans.vercel.app/)**  
+**[➡️ View Live Demo](https://YOUR_VERCEL_APP_URL_HERE)**  
 *(Replace the link above with your actual Vercel deployment URL)*
 
 ---
+
   
-![Application Screenshot](app-audio-to-trans.PNG)
+*(It's highly recommended to add a screenshot of your application here)*
 
 ## ✨ Key Features
 
