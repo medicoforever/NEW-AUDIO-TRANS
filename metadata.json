@@ -1,0 +1,7 @@
+{
+  "name": "Copy of Audio Transcription & Translation..",
+  "description": "An AI-powered tool to record or upload audio, which then provides a complete andate English transcript. The app identifies the audio's language, translates if necessary, and corrects grammatical mistakes for a polished output..",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}

@@ -1,0 +1,2 @@
+export const GEMINI_PROMPT = `Listen to the uploaded audio and provide a complete and accurate English transcript. Identify the language of the audio. If it is not in English, translate it into English before providing the transcript. Correct any grammatical or spelling mistakes present in the original audio to ensure the transcript is clear and polished.
+Your output should be that corrected / modified english transcript only and nothing else`;
