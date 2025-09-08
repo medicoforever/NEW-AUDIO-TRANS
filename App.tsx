@@ -1,5 +1,6 @@
 
 
+
 import React, { useState, useCallback, useEffect } from 'react';
 import AudioRecorder from './components/AudioRecorder';
 import ResultsDisplay from './components/ResultsDisplay';
@@ -175,8 +176,8 @@ const App: React.FC = () => {
         return;
       }
       
-      // FIX: Pass the message parts array directly to sendMessage, not wrapped in an object.
-      const response = await chat.sendMessage(messageParts);
+      // FIX: The `sendMessage` method expects an object with a `message` property containing the parts array.
+      const response = await chat.sendMessage({ message: messageParts });
       const responseText = response.text;
       setChatHistory(prev => [...prev, { author: 'AI', text: responseText }]);
     } catch (err) {

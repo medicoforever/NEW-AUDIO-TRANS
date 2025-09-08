@@ -1,5 +1,6 @@
 
 
+
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useAudioRecorder } from '../hooks/useAudioRecorder';
 import { processAudio, createChat, blobToBase64, getCleanMimeType, base64ToBlob } from '../services/geminiService';
@@ -346,8 +347,8 @@ const BatchProcessor: React.FC<BatchProcessorProps> = ({ onBack, model }) => {
                  return;
             }
 
-            // FIX: Pass the message parts array directly to sendMessage, not wrapped in an object.
-            const response = await chatToUse.sendMessage(messageParts);
+            // FIX: The `sendMessage` method expects an object with a `message` property containing the parts array.
+            const response = await chatToUse.sendMessage({ message: messageParts });
             const responseText = response.text;
             setBatches(prev => prev.map(b => b.id === batchId ? {...b, chatHistory: [...updatedHistory, { author: 'AI' as const, text: responseText }]} : b));
         } catch (err) {
