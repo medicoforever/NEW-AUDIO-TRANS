@@ -63,49 +63,60 @@ const BatchProcessor: React.FC<BatchProcessorProps> = ({ onBack, model }) => {
     const [isCopyAllCopied, setIsCopyAllCopied] = useState(false);
     const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
     const [isDataLoaded, setIsDataLoaded] = useState(false);
+    const didMountRef = useRef(false);
     
     // Auto-save effect
     useEffect(() => {
-        if (!isDataLoaded) return; // Do not save until initial data has been loaded
+        // We use the didMountRef to prevent saving on the initial load.
+        // We only want to save when the user makes a change *after*
+        // the initial data has been loaded and set.
+        if (didMountRef.current) {
+            const saveBatches = async () => {
+                if (!user) return;
 
-        const saveBatches = async () => {
-            if (!user) return;
+                try {
+                    const serializableBatches: SerializableBatch[] = await Promise.all(
+                        batches.map(async (batch) => {
+                            const serializedBlobs = await Promise.all(
+                                batch.audioBlobs.map(async (blob) => ({
+                                    data: await blobToBase64(blob),
+                                    type: blob.type,
+                                }))
+                            );
+                            return {
+                                id: batch.id,
+                                name: batch.name,
+                                audioBlobs: serializedBlobs,
+                                transcript: batch.transcript,
+                                status: batch.status,
+                                model: batch.model,
+                                selectedReprocessModel: batch.selectedReprocessModel,
+                                error: batch.error,
+                                chatHistory: batch.chatHistory,
+                            };
+                        })
+                    );
+                    await saveBatchModeHistory(serializableBatches);
+                } catch (error) {
+                    console.error("Failed to save batches:", error);
+                }
+            };
 
-            try {
-                const serializableBatches: SerializableBatch[] = await Promise.all(
-                    batches.map(async (batch) => {
-                        const serializedBlobs = await Promise.all(
-                            batch.audioBlobs.map(async (blob) => ({
-                                data: await blobToBase64(blob),
-                                type: blob.type,
-                            }))
-                        );
-                        return {
-                            id: batch.id,
-                            name: batch.name,
-                            audioBlobs: serializedBlobs,
-                            transcript: batch.transcript,
-                            status: batch.status,
-                            model: batch.model,
-                            selectedReprocessModel: batch.selectedReprocessModel,
-                            error: batch.error,
-                            chatHistory: batch.chatHistory,
-                        };
-                    })
-                );
-                await saveBatchModeHistory(serializableBatches);
-            } catch (error) {
-                console.error("Failed to save batches:", error);
+            const handler = setTimeout(() => {
+                saveBatches();
+            }, 1000); // Debounce saving
+
+            return () => {
+                clearTimeout(handler);
+            };
+        } else {
+            // On the first run, if isDataLoaded is true, it means we have
+            // successfully loaded the initial state. We can now enable saving
+            // for subsequent updates.
+            if (isDataLoaded) {
+                didMountRef.current = true;
             }
-        };
-
-        const handler = setTimeout(() => {
-            saveBatches();
-        }, 1000); // Debounce saving
-
-        return () => {
-            clearTimeout(handler);
-        };
+        }
     }, [batches, user, saveBatchModeHistory, isDataLoaded]);
 
     // Load effect
