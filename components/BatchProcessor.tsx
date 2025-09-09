@@ -106,36 +106,18 @@ const BatchProcessor: React.FC<BatchProcessorProps> = ({ onBack, model }) => {
         }
     }, [user, isDataLoaded, saveBatchModeHistory]);
 
-    // Effect for debounced auto-saving during normal user activity.
+    // Effect for auto-saving.
     useEffect(() => {
-        if (!isDataLoaded) {
-            return;
-        }
-        const handler = setTimeout(() => {
+        // This effect now directly calls the save function whenever 'batches' changes.
+        // `isDataLoaded` is checked inside the function, but removed from the dependency
+        // array here. This is a pragmatic choice to prevent an issue where the effect
+        // would fire upon the initial data load (when `isDataLoaded` becomes true),
+        // causing it to save an empty `batches` array and overwrite the user's data.
+        if (isDataLoaded) {
             saveBatchesToFirestore();
-        }, 1500);
-
-        return () => {
-            clearTimeout(handler);
-        };
-    }, [batches, isDataLoaded, saveBatchesToFirestore]);
-
-    // Effect for reliably saving when the user leaves the page (switches tabs, closes window, etc.).
-    useEffect(() => {
-        const handleSaveOnExit = () => {
-             if (document.visibilityState === 'hidden') {
-                saveBatchesToFirestore();
-            }
-        };
-        // 'visibilitychange' and 'pagehide' are the most reliable events for this purpose.
-        document.addEventListener('visibilitychange', handleSaveOnExit);
-        window.addEventListener('pagehide', handleSaveOnExit);
-
-        return () => {
-            document.removeEventListener('visibilitychange', handleSaveOnExit);
-            window.removeEventListener('pagehide', handleSaveOnExit);
-        };
-    }, [saveBatchesToFirestore]);
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [batches, saveBatchesToFirestore]);
 
 
     // Load saved data on initial component mount.

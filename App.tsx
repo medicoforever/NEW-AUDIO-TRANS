@@ -18,7 +18,13 @@ interface ChatMessage {
 const App: React.FC = () => {
   const { user, apiKey, logout, loadUserData, saveSingleModeHistory, clearAllHistory } = useAuth();
 
-  const [mode, setMode] = useState<'single' | 'batch'>('single');
+  const [mode, setMode] = useState<'single' | 'batch'>(() => {
+    return (localStorage.getItem('dictationMode') as 'single' | 'batch') || 'single';
+  });
+
+  useEffect(() => {
+    localStorage.setItem('dictationMode', mode);
+  }, [mode]);
   const [model, setModel] = useState<string>('gemini-2.5-flash');
   const [status, setStatus] = useState<AppStatus>(AppStatus.Idle);
   const [transcript, setTranscript] = useState<string>('');
