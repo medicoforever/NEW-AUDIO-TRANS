@@ -314,7 +314,7 @@ const BatchProcessor: React.FC<BatchProcessorProps> = ({ onBack, model }) => {
             if (!chatToUse && batch.transcript && batch.audioBlobs.length > 0) {
                 const mimeType = getCleanMimeType(batch.audioBlobs[0]);
                 const mergedBlob = new Blob(batch.audioBlobs, { type: mimeType });
-                chatToUse = await createChat(mergedBlob, batch.transcript, batch.model, updatedHistoryWithUser);
+                chatToUse = await createChat(mergedBlob, batch.transcript, batch.model, batch.chatHistory);
                 
                 const newChat = chatToUse;
                 // Update batch in state with the new chat session for future use
