@@ -1,8 +1,4 @@
 
-
-
-
-
 import React, { useState, useCallback, useEffect } from 'react';
 import AudioRecorder from './components/AudioRecorder';
 import ResultsDisplay from './components/ResultsDisplay';
@@ -314,6 +310,8 @@ const App: React.FC = () => {
                 aria-label="Select AI Model"
               >
                 <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
+                <option value="gemini-1.5-pro">Gemini 1.5 Pro</option>
+                <option value="gemini-pro">Gemini Pro</option>
               </select>
             </div>
           </div>

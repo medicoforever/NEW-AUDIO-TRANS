@@ -314,7 +314,7 @@ const BatchProcessor: React.FC<BatchProcessorProps> = ({ onBack, model }) => {
             if (!chatToUse && batch.transcript && batch.audioBlobs.length > 0) {
                 const mimeType = getCleanMimeType(batch.audioBlobs[0]);
                 const mergedBlob = new Blob(batch.audioBlobs, { type: mimeType });
-                chatToUse = await createChat(mergedBlob, batch.transcript, batch.model, batch.chatHistory);
+                chatToUse = await createChat(mergedBlob, batch.transcript, batch.model, updatedHistoryWithUser);
                 
                 const newChat = chatToUse;
                 // Update batch in state with the new chat session for future use
@@ -349,18 +349,21 @@ const BatchProcessor: React.FC<BatchProcessorProps> = ({ onBack, model }) => {
 
             const response = await chatToUse.sendMessage({ message: messageParts });
             const responseText = response.text;
-
-            // FIX: Use the functional form of setBatches to avoid stale state.
-            // Append the new AI message to the most recent chat history.
-            setBatches(prev => prev.map(b => b.id === batchId ? {...b, chatHistory: [...(b.chatHistory || []), { author: 'AI' as const, text: responseText }]} : b));
+            
+            setBatches(prev => prev.map(b => b.id === batchId ? {
+                ...b,
+                isChatting: false,
+                chatHistory: [...updatedHistoryWithUser, { author: 'AI' as const, text: responseText }]
+            } : b));
 
         } catch (err) {
             console.error("Chat error:", err);
             const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred.';
-            // FIX: Use the functional form of setBatches to avoid stale state.
-            setBatches(prev => prev.map(b => b.id === batchId ? {...b, chatHistory: [...(b.chatHistory || []), { author: 'AI' as const, text: `Sorry, I encountered an error: ${errorMessage}` }]} : b));
-        } finally {
-            setBatches(prev => prev.map(b => b.id === batchId ? {...b, isChatting: false} : b));
+            setBatches(prev => prev.map(b => b.id === batchId ? {
+                ...b,
+                isChatting: false,
+                chatHistory: [...updatedHistoryWithUser, { author: 'AI' as const, text: `Sorry, I encountered an error: ${errorMessage}` }]
+            } : b));
         }
     };
 
@@ -559,6 +562,8 @@ const BatchProcessor: React.FC<BatchProcessorProps> = ({ onBack, model }) => {
                                                                         aria-label={`Select AI Model for re-processing ${batch.name}`}
                                                                     >
                                                                         <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
+                                                                        <option value="gemini-1.5-pro">Gemini 1.5 Pro</option>
+                                                                        <option value="gemini-pro">Gemini Pro</option>
                                                                     </select>
                                                                     <button
                                                                         onClick={() => handleReprocessBatch(batch.id)}
