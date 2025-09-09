@@ -62,59 +62,83 @@ const BatchProcessor: React.FC<BatchProcessorProps> = ({ onBack, model }) => {
     const [isCopyAllCopied, setIsCopyAllCopied] = useState(false);
     const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
     const [isDataLoaded, setIsDataLoaded] = useState(false);
-    
-    // Auto-save effect
+    const batchesRef = useRef(batches);
+
+    // Keep the ref updated with the latest state to avoid stale closures in event listeners.
     useEffect(() => {
-        // This is the crucial guard. We do not perform any save operation
-        // until the initial data has been successfully loaded from Firestore.
-        // This prevents a race condition where the initial empty state of `batches`
-        // would be saved to the cloud, overwriting the user's data.
-        if (!isDataLoaded) {
+        batchesRef.current = batches;
+    }, [batches]);
+
+    // A stable, memoized function for saving the current batch data to Firestore.
+    const saveBatchesToFirestore = useCallback(async () => {
+        // Guard against saving before user is logged in or initial data has loaded.
+        if (!user || !isDataLoaded) {
             return;
         }
 
-        const saveBatches = async () => {
-            if (!user) return;
+        const currentBatches = batchesRef.current;
+        
+        try {
+            const serializableBatches: SerializableBatch[] = await Promise.all(
+                currentBatches.map(async (batch) => {
+                    const serializedBlobs = await Promise.all(
+                        batch.audioBlobs.map(async (blob) => ({
+                            data: await blobToBase64(blob),
+                            type: blob.type,
+                        }))
+                    );
+                    return {
+                        id: batch.id,
+                        name: batch.name,
+                        audioBlobs: serializedBlobs,
+                        transcript: batch.transcript,
+                        status: batch.status,
+                        model: batch.model,
+                        selectedReprocessModel: batch.selectedReprocessModel,
+                        error: batch.error,
+                        chatHistory: batch.chatHistory,
+                    };
+                })
+            );
+            await saveBatchModeHistory(serializableBatches);
+        } catch (error) {
+            console.error("Failed to save batches:", error);
+        }
+    }, [user, isDataLoaded, saveBatchModeHistory]);
 
-            try {
-                const serializableBatches: SerializableBatch[] = await Promise.all(
-                    batches.map(async (batch) => {
-                        const serializedBlobs = await Promise.all(
-                            batch.audioBlobs.map(async (blob) => ({
-                                data: await blobToBase64(blob),
-                                type: blob.type,
-                            }))
-                        );
-                        return {
-                            id: batch.id,
-                            name: batch.name,
-                            audioBlobs: serializedBlobs,
-                            transcript: batch.transcript,
-                            status: batch.status,
-                            model: batch.model,
-                            selectedReprocessModel: batch.selectedReprocessModel,
-                            error: batch.error,
-                            chatHistory: batch.chatHistory,
-                        };
-                    })
-                );
-                await saveBatchModeHistory(serializableBatches);
-            } catch (error) {
-                console.error("Failed to save batches:", error);
-            }
-        };
-
-        // Debounce the save operation to avoid excessive writes to Firestore
+    // Effect for debounced auto-saving during normal user activity.
+    useEffect(() => {
+        if (!isDataLoaded) {
+            return;
+        }
         const handler = setTimeout(() => {
-            saveBatches();
-        }, 1000); 
+            saveBatchesToFirestore();
+        }, 1500);
 
         return () => {
             clearTimeout(handler);
         };
-    }, [batches, isDataLoaded, user, saveBatchModeHistory]);
+    }, [batches, isDataLoaded, saveBatchesToFirestore]);
 
-    // Load effect
+    // Effect for reliably saving when the user leaves the page (switches tabs, closes window, etc.).
+    useEffect(() => {
+        const handleSaveOnExit = () => {
+             if (document.visibilityState === 'hidden') {
+                saveBatchesToFirestore();
+            }
+        };
+        // 'visibilitychange' and 'pagehide' are the most reliable events for this purpose.
+        document.addEventListener('visibilitychange', handleSaveOnExit);
+        window.addEventListener('pagehide', handleSaveOnExit);
+
+        return () => {
+            document.removeEventListener('visibilitychange', handleSaveOnExit);
+            window.removeEventListener('pagehide', handleSaveOnExit);
+        };
+    }, [saveBatchesToFirestore]);
+
+
+    // Load saved data on initial component mount.
     useEffect(() => {
         const loadBatches = async () => {
             if (!user) {
