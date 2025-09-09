@@ -62,11 +62,14 @@ const BatchProcessor: React.FC<BatchProcessorProps> = ({ onBack, model }) => {
     const [copiedBatchId, setCopiedBatchId] = useState<string | null>(null);
     const [isCopyAllCopied, setIsCopyAllCopied] = useState(false);
     const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
+    const [isDataLoaded, setIsDataLoaded] = useState(false);
     
     // Auto-save effect
     useEffect(() => {
+        if (!isDataLoaded) return; // Do not save until initial data has been loaded
+
         const saveBatches = async () => {
-            if (!user) return; // Don't save if there are no batches, to allow clearing history
+            if (!user) return;
 
             try {
                 const serializableBatches: SerializableBatch[] = await Promise.all(
@@ -103,12 +106,15 @@ const BatchProcessor: React.FC<BatchProcessorProps> = ({ onBack, model }) => {
         return () => {
             clearTimeout(handler);
         };
-    }, [batches, user, saveBatchModeHistory]);
+    }, [batches, user, saveBatchModeHistory, isDataLoaded]);
 
     // Load effect
     useEffect(() => {
         const loadBatches = async () => {
-            if (!user) return;
+            if (!user) {
+                setIsDataLoaded(true);
+                return;
+            }
             const userData = await loadUserData();
             const serializableBatches = userData?.batchModeSave;
             
@@ -132,6 +138,7 @@ const BatchProcessor: React.FC<BatchProcessorProps> = ({ onBack, model }) => {
                     console.error("Failed to load saved batches:", error);
                 }
             }
+            setIsDataLoaded(true);
         };
         loadBatches();
     }, [user, loadUserData]);
@@ -562,8 +569,8 @@ const BatchProcessor: React.FC<BatchProcessorProps> = ({ onBack, model }) => {
                                                                         aria-label={`Select AI Model for re-processing ${batch.name}`}
                                                                     >
                                                                         <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
-                                                                        <option value="gemini-1.5-pro">Gemini 1.5 Pro</option>
-                                                                        <option value="gemini-pro">Gemini Pro</option>
+                                                                        <option value="gemini-2.5-pro">Gemini 2.5 Pro</option>
+                                                                        <option value="gemini-2.5-flash-lite">Gemini 2.5 Flash Lite</option>
                                                                     </select>
                                                                     <button
                                                                         onClick={() => handleReprocessBatch(batch.id)}
